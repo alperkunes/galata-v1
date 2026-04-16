@@ -360,7 +360,24 @@
       }
     }
 
-    /* PUANTAJ TABLOSU MOBİL */
+    /* PERSONEL AYLIK TABLO — İlk sütun sabit */
+    .sticky-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .sticky-table{width:100%;border-collapse:collapse}
+    .sticky-table thead th{padding:10px 12px;background:var(--bg);border-bottom:2px solid var(--line);text-align:left;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);white-space:nowrap}
+    .sticky-table td{padding:11px 12px;border-bottom:1px solid var(--line2);font-size:14px;vertical-align:middle;white-space:nowrap}
+    .sticky-table tbody tr:hover td{background:var(--acc-light)}
+    .sticky-table tbody tr:last-child td{border-bottom:none}
+    .sticky-table th:first-child,
+    .sticky-table td:first-child{
+      position:sticky;left:0;z-index:2;
+      background:var(--card);
+      border-right:2px solid var(--line);
+      min-width:120px;
+    }
+    .sticky-table thead th:first-child{
+      background:var(--bg);z-index:3;
+    }
+    .sticky-table tbody tr:hover td:first-child{background:var(--acc-light)}
     .att-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
     .att-desktop-table{width:100%;border-collapse:collapse}
     .att-desktop-table thead th{padding:10px 12px;background:var(--bg);border-bottom:2px solid var(--line);text-align:left;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
@@ -615,7 +632,7 @@
             <div class="muted" style="font-size:11px">İçinde bulunulan ayda bugün dahil bugüne kadar sayılır.</div>
           </div>
         </div>
-        <div class="scroll-x"><table class="desktop-table" style="margin-top:10px">
+        <div class="sticky-table-wrap"><table class="sticky-table" style="margin-top:10px">
           <thead>
             <tr>
               <th>Ad</th>
