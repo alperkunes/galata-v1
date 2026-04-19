@@ -465,6 +465,15 @@
       #tab-stock table{min-width:900px}
     }
 
+  
+    /* Stok detay modal */
+    @media (max-width:520px){
+      #stockDetailModal .desktop-table{display:table!important}
+      #stockDetailModal .desktop-table-wrap,
+      #stockDetailModal .scroll-x{display:block!important;overflow-x:auto;-webkit-overflow-scrolling:touch}
+      #stockDetailModal table{min-width:860px}
+    }
+
   </style>
 </head>
 <body>
@@ -792,7 +801,7 @@
           <input id="stockMoveAmount" type="number" step="0.01" placeholder="Alış tutarı opsiyonel" />
           <input id="stockMoveNote" placeholder="Not" />
           <button class="btn-primary" onclick="createStockMovement()">+ Hareket Ekle</button>
-          <div class="muted" style="grid-column:1/-1">Not: Hareket tipi <b>Sayım</b> seçildiğinde, girilen rakam mevcut stoktan farklıysa sistem kayıt öncesi uyarı verir.</div>
+          <div class="muted" style="grid-column:1/-1">Not: Hareket tipi <b>Sayım</b> seçildiğinde, girilen miktar mevcut stoktan farklıysa sistem kayıt öncesi uyarı verir.</div>
         </div>
       </div>
 
@@ -1096,6 +1105,78 @@
     </div>
   </div>
 
+
+  <div id="stockDetailModal" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <div id="stockDetailTitle" class="modal-title">Stok Detayı</div>
+          <div id="stockDetailSummary" class="muted"></div>
+        </div>
+        <button class="btn-sm" onclick="closeStockDetail()">✕ Kapat</button>
+      </div>
+
+      <input type="hidden" id="stockDetailItemId" />
+
+      <div class="panel-summary-grid" style="margin-bottom:12px">
+        <div class="summary-card">
+          <div class="muted">Mevcut</div>
+          <div id="stockDetailCurrent" class="summary">0</div>
+        </div>
+        <div class="summary-card danger">
+          <div class="muted">Min Stok</div>
+          <div id="stockDetailMin" class="summary danger">0</div>
+        </div>
+        <div class="summary-card ok">
+          <div class="muted">Son Sayım</div>
+          <div id="stockDetailCount" class="summary ok">-</div>
+        </div>
+      </div>
+
+      <div class="card-inner" style="margin-bottom:12px">
+        <div class="row-between" style="margin-bottom:10px">
+          <div>
+            <b>Hareket Geçmişi</b>
+            <div class="muted">Tarih ve tipe göre filtreleyebilir, hareketleri düzenleyip silebilirsin.</div>
+          </div>
+          <div id="stockDetailCountBadge" class="badge">0 kayıt</div>
+        </div>
+
+        <div class="grid grid-4" style="margin-bottom:12px">
+          <input id="stockDetailDateFrom" type="date" onchange="renderStockDetailRows()" />
+          <input id="stockDetailDateTo" type="date" onchange="renderStockDetailRows()" />
+          <select id="stockDetailType" onchange="renderStockDetailRows()">
+            <option value="">Tüm Hareketler</option>
+            <option value="giris">Giriş</option>
+            <option value="cikis">Çıkış</option>
+            <option value="sayim">Sayım</option>
+            <option value="fire">Fire</option>
+            <option value="ikram">İkram</option>
+          </select>
+          <input id="stockDetailText" placeholder="Not veya tedarikçi ara" oninput="renderStockDetailRows()" />
+          <button onclick="resetStockDetailFilters()">Filtreleri Temizle</button>
+        </div>
+
+        <div class="desktop-table-wrap">
+          <table class="desktop-table">
+            <thead>
+              <tr>
+                <th>Tarih</th>
+                <th>Tip</th>
+                <th>Miktar</th>
+                <th>Tedarikçi</th>
+                <th>Tutar</th>
+                <th>Not</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="stockDetailTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- BOTTOM NAV — sadece telefonda görünür -->
   <nav class="bottom-nav" id="bottomNav">
     <button class="bottom-nav-item active" id="bnav-panel" onclick="showTab('panel',this);updateBottomNav('panel')">
@@ -1115,15 +1196,12 @@
     </button>
   </nav>
 
-  <!-- MORE MENU — telefonda stok, ayarlar ve kullanıcılar için -->
+  <!-- MORE MENU — telefonda ayarlar ve kullanıcılar için -->
   <div id="moreMenu" style="display:none;position:fixed;bottom:72px;right:10px;left:10px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 -2px 20px rgba(0,0,0,.15);padding:8px;z-index:60">
-    <button style="width:100%;justify-content:flex-start;gap:12px;border:none;font-size:15px;padding:13px 14px;border-radius:10px" data-more-tab="stock" onclick="showTab('stock',document.querySelector('.tab[data-tab=stock]'));updateBottomNav('stock');toggleMoreMenu()">
-      📦 Stok
-    </button>
-    <button style="width:100%;justify-content:flex-start;gap:12px;border:none;font-size:15px;padding:13px 14px;border-radius:10px" data-more-tab="settings" onclick="showTab('settings',document.querySelector('.tab[data-tab=settings]'));updateBottomNav('settings');toggleMoreMenu()">
+    <button style="width:100%;justify-content:flex-start;gap:12px;border:none;font-size:15px;padding:13px 14px;border-radius:10px" onclick="showTab('settings',document.querySelector('.tab[data-tab=settings]'));updateBottomNav('settings');toggleMoreMenu()">
       ⚙️ Ayarlar
     </button>
-    <button style="width:100%;justify-content:flex-start;gap:12px;border:none;font-size:15px;padding:13px 14px;border-radius:10px" data-more-tab="users" onclick="showTab('users',document.querySelector('.tab[data-tab=users]'));updateBottomNav('users');toggleMoreMenu()">
+    <button style="width:100%;justify-content:flex-start;gap:12px;border:none;font-size:15px;padding:13px 14px;border-radius:10px" onclick="showTab('users',document.querySelector('.tab[data-tab=users]'));updateBottomNav('users');toggleMoreMenu()">
       🔐 Kullanıcılar
     </button>
     <div style="height:1px;background:var(--line2);margin:4px 0"></div>
@@ -1236,14 +1314,6 @@ function applyBottomNavPermissions(){
     var btn = document.getElementById('bnav-'+tab);
     if(btn) btn.style.display = hasPermission(perm) ? '' : 'none';
   });
-
-  var more = document.getElementById('moreMenu');
-  if(more){
-    more.querySelectorAll('[data-more-tab]').forEach(function(btn){
-      var tab = btn.getAttribute('data-more-tab');
-      btn.style.display = tabPermission(tab) ? '' : 'none';
-    });
-  }
 }
 
 function applyTabPermissions(){
@@ -1621,7 +1691,7 @@ function renderStock(){
       <td>${totals.sayim}</td>
       <td><b>${qty}</b></td>
       <td><span class="badge ${critical ? 'badge-danger' : 'badge-ok'}">${critical ? 'Kritik' : 'Normal'}</span></td>
-      <td><button class="mini" onclick="editStockItem('${item.id}')">Düzenle</button> <button class="mini btn-danger" onclick="deleteStockItem('${item.id}')">Sil</button></td>
+      <td><button class="mini" onclick="openStockDetail('${item.id}')">Detay</button> <button class="mini" onclick="editStockItem('${item.id}')">Düzenle</button> <button class="mini btn-danger" onclick="deleteStockItem('${item.id}')">Sil</button></td>
     `;
     tbody.appendChild(tr);
   });
@@ -1658,24 +1728,21 @@ async function createStockMovement(){
   const quantity = Number(byId('stockMoveQty').value || 0);
 
   if(!item_id) return alert('Ürün seç.');
-  if(quantity < 0 || byId('stockMoveQty').value === '') return alert('Geçerli miktar gir.');
+  if(byId('stockMoveQty').value === '' || quantity < 0) return alert('Geçerli miktar gir.');
 
   const item = state.stockItems.find(i => i.id === item_id);
-  const currentBeforeCount = stockQuantity(item_id);
+  const currentStock = stockQuantity(item_id);
 
   if(type === 'sayim'){
-    const difference = quantity - currentBeforeCount;
-
-    if(difference !== 0){
-      const direction = difference > 0 ? 'fazla' : 'eksik';
+    const diff = quantity - currentStock;
+    if(diff !== 0){
       const ok = confirm(
         `${item?.name || 'Seçili ürün'} için sayım farkı var.\n\n` +
-        `Sistemdeki mevcut stok: ${currentBeforeCount}\n` +
-        `Girdiğin sayım: ${quantity}\n` +
-        `Fark: ${Math.abs(difference)} ${direction}\n\n` +
+        `Sistemdeki mevcut stok: ${currentStock}\n` +
+        `Girilen sayım: ${quantity}\n` +
+        `Fark: ${diff > 0 ? '+' : ''}${diff}\n\n` +
         `Bu sayımı kaydetmek istiyor musun?`
       );
-
       if(!ok) return;
     }
   }
@@ -1695,9 +1762,9 @@ async function createStockMovement(){
   if(error) return alert(error.message);
 
   if(type === 'sayim'){
-    const difference = quantity - currentBeforeCount;
-    if(difference !== 0){
-      alert(`Sayım kaydedildi. Stok farkı: ${difference > 0 ? '+' : ''}${difference}`);
+    const diff = quantity - currentStock;
+    if(diff !== 0){
+      alert(`Sayım kaydedildi. Fark: ${diff > 0 ? '+' : ''}${diff}`);
     }
   }
 
@@ -1729,6 +1796,143 @@ async function deleteStockItem(id){
   const { error } = await sb.from('stock_items').delete().eq('id', id).eq('business_id', state.activeBusinessId);
   if(error) return alert(error.message);
   await loadCore();
+}
+
+
+
+function stockMovementRowsForItem(itemId){
+  const dateFrom = byId('stockDetailDateFrom')?.value || '';
+  const dateTo = byId('stockDetailDateTo')?.value || '';
+  const type = byId('stockDetailType')?.value || '';
+  const q = (byId('stockDetailText')?.value || '').trim().toLocaleLowerCase('tr-TR');
+
+  return state.stockMovements
+    .filter(m => m.item_id === itemId)
+    .filter(m => {
+      const supplierName = m.supplier_id ? (state.suppliers.find(s => s.id === m.supplier_id)?.name || '') : '';
+      const blob = `${m.note || ''} ${supplierName}`.toLocaleLowerCase('tr-TR');
+      if(dateFrom && m.movement_date < dateFrom) return false;
+      if(dateTo && m.movement_date > dateTo) return false;
+      if(type && m.type !== type) return false;
+      if(q && !blob.includes(q)) return false;
+      return true;
+    })
+    .sort((a,b) => String(b.movement_date).localeCompare(String(a.movement_date)) || String(b.created_at).localeCompare(String(a.created_at)));
+}
+
+function closeStockDetail(){
+  byId('stockDetailModal').classList.add('hidden');
+}
+
+function resetStockDetailFilters(){
+  ['stockDetailDateFrom','stockDetailDateTo','stockDetailText'].forEach(id => { if(byId(id)) byId(id).value = ''; });
+  if(byId('stockDetailType')) byId('stockDetailType').value = '';
+  renderStockDetailRows();
+}
+
+function openStockDetail(itemId){
+  const item = state.stockItems.find(i => i.id === itemId);
+  if(!item) return alert('Ürün bulunamadı.');
+
+  byId('stockDetailItemId').value = itemId;
+  byId('stockDetailTitle').textContent = `${item.name} - Stok Detayı`;
+
+  const qty = stockQuantity(itemId);
+  const totals = stockTotals(itemId);
+  byId('stockDetailCurrent').textContent = qty;
+  byId('stockDetailMin').textContent = item.min_stock || 0;
+  byId('stockDetailCount').textContent = totals.sayim === '' ? '-' : totals.sayim;
+  byId('stockDetailSummary').textContent = `${item.category || 'Kategori yok'} • ${item.unit || ''}${item.bottle_size_cl ? ` / ${item.bottle_size_cl}cl` : ''}`;
+
+  resetStockDetailFilters();
+  byId('stockDetailModal').classList.remove('hidden');
+}
+
+function renderStockDetailRows(){
+  const itemId = byId('stockDetailItemId')?.value;
+  const tbody = byId('stockDetailTable');
+  if(!itemId || !tbody) return;
+
+  const rows = stockMovementRowsForItem(itemId);
+  tbody.innerHTML = '';
+  if(byId('stockDetailCountBadge')) byId('stockDetailCountBadge').textContent = `${rows.length} kayıt`;
+
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="7" class="muted">Bu ürüne ait hareket bulunamadı.</td></tr>';
+    return;
+  }
+
+  rows.forEach(m => {
+    const supplierName = m.supplier_id ? (state.suppliers.find(s => s.id === m.supplier_id)?.name || '-') : '-';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${m.movement_date}</td>
+      <td>${m.type}</td>
+      <td><b>${m.quantity}</b></td>
+      <td>${supplierName}</td>
+      <td>${m.amount ? money(m.amount) : '-'}</td>
+      <td>${m.note || ''}</td>
+      <td>
+        <button class="mini" onclick="editStockMovement('${m.id}')">Düzenle</button>
+        <button class="mini btn-danger" onclick="deleteStockMovement('${m.id}')">Sil</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function editStockMovement(id){
+  const m = state.stockMovements.find(x => x.id === id);
+  if(!m) return alert('Hareket bulunamadı.');
+
+  const date = prompt('Tarih (YYYY-AA-GG)', m.movement_date || today());
+  if(date === null) return;
+
+  const type = prompt('Tip (giris, cikis, sayim, fire, ikram)', m.type || 'giris');
+  if(type === null) return;
+  const cleanType = type.trim().toLowerCase();
+  if(!['giris','cikis','sayim','fire','ikram'].includes(cleanType)) return alert('Geçersiz tip.');
+
+  const qtyRaw = prompt('Miktar', String(m.quantity || 0));
+  if(qtyRaw === null) return;
+  const quantity = Number(qtyRaw);
+  if(Number.isNaN(quantity) || quantity < 0) return alert('Geçerli miktar gir.');
+
+  const amountRaw = prompt('Tutar (boş bırakılabilir)', m.amount == null ? '' : String(m.amount));
+  if(amountRaw === null) return;
+
+  const note = prompt('Not', m.note || '');
+  if(note === null) return;
+
+  const { error } = await sb.from('stock_movements')
+    .update({
+      movement_date: date,
+      type: cleanType,
+      quantity,
+      amount: amountRaw === '' ? null : Number(amountRaw),
+      note: note.trim() || null
+    })
+    .eq('id', id)
+    .eq('business_id', state.activeBusinessId);
+
+  if(error) return alert(error.message);
+  await loadCore();
+  openStockDetail(m.item_id);
+}
+
+async function deleteStockMovement(id){
+  const m = state.stockMovements.find(x => x.id === id);
+  if(!m) return alert('Hareket bulunamadı.');
+  if(!confirm('Bu stok hareketini silmek istiyor musun?')) return;
+
+  const { error } = await sb.from('stock_movements')
+    .delete()
+    .eq('id', id)
+    .eq('business_id', state.activeBusinessId);
+
+  if(error) return alert(error.message);
+  await loadCore();
+  openStockDetail(m.item_id);
 }
 
 
@@ -3263,6 +3467,5 @@ boot();
 </script>
 <!-- payment-methods-v1 -->
 <!-- Galata V1 GitHub Pages ready: permissions + private employee data -->
-<!-- mobil stok menusu fix -->
 </body>
 </html>
